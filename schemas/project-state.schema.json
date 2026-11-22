@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muselab.local/schemas/project-state.schema.json",
+  "title": "MuseLab Project State",
+  "description": "The single source of truth for a multi-step session: profiles, designs (versioned), image tasks.",
+  "type": "object",
+  "required": ["project_id", "title", "created_at", "updated_at", "designs"],
+  "properties": {
+    "project_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{3,60}$" },
+    "title": { "type": "string" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" },
+    "workspace_dir": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "selected", "approved", "revision_requested", "generated", "failed"],
+      "description": "Project-level status; individual designs carry their own"
+    },
+    "profiles": {
+      "type": "object",
+      "description": "profile_id -> Visual Profile",
+      "additionalProperties": { "type": "object" }
+    },
+    "designs": {
+      "type": "object",
+      "description": "design_id -> design record with version history",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["design_id", "current_version", "versions"],
+        "properties": {
+          "design_id": { "type": "string" },
+          "current_version": { "type": "integer", "minimum": 1 },
+          "frozen": { "type": "boolean", "description": "true once approved: reference only, no silent edits" },
+          "versions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["version", "status", "spec"],
+              "properties": {
+                "version": { "type": "integer", "minimum": 1 },
+                "status": {
+                  "type": "string",
+                  "enum": ["draft", "selected", "approved", "revision_requested", "generated", "failed"]
+                },
+                "spec": { "type": "object" },
+                "note": { "type": "string" },
+                "change_request": { "type": "string" },
+                "created_at": { "type": "string" },
+                "image_task_ids": { "type": "array", "items": { "type": "string" } }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "image_tasks": {
+      "type": "object",
+      "additionalProperties": { "type": "object" }
+    },
+    "modules_used": { "type": "array", "items": { "type": "string" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

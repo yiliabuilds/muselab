@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muselab.local/schemas/makeup-spec.schema.json",
+  "title": "MuseLab Makeup Specification (module_payload for design_category=makeup)",
+  "description": "妆容模块的专有载荷。外层仍复用 design-spec.schema.json（design_id / design_category='makeup' / design_name / concept / image_prompt / negative_prompt / version / approval_status），妆容字段全部放在 module_payload 里，不改变首饰字段语义。状态机与版本链完全复用 muselab_state.py。",
+  "type": "object",
+  "required": [
+    "makeup_name_zh",
+    "makeup_style",
+    "visual_focus",
+    "inspiration_source",
+    "palette",
+    "layers",
+    "application_steps",
+    "generation"
+  ],
+  "properties": {
+    "makeup_name_zh": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "中文名，与 design_name 保持一致"
+    },
+    "makeup_name_en": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "makeup_style": {
+      "type": "string",
+      "enum": [
+        "daily_clean",
+        "cool_ethereal",
+        "sun_kissed",
+        "editorial",
+        "evening_glam",
+        "retro",
+        "grunge_minimal",
+        "bridal",
+        "stage",
+        "other"
+      ],
+      "description": "daily_clean=日常轻透, cool_ethereal=冷调清透, sun_kissed=晒伤感, editorial=创意杂志, evening_glam=晚宴精致, retro=复古, grunge_minimal=冷感裸妆, bridal=新娘, stage=舞台"
+    },
+    "style_reason": {
+      "type": "string",
+      "description": "为什么是这种风格，必须挂到参考图的某个可观察特征上"
+    },
+    "visual_focus": {
+      "type": "string",
+      "enum": ["eyes", "lips", "skin", "cheeks", "brows", "balanced"],
+      "description": "视觉重点只能有一个；balanced 仅用于刻意无主角的极简妆，且必须说明理由"
+    },
+    "focus_strength": {
+      "type": "string",
+      "enum": ["subtle", "moderate", "strong"]
+    },
+    "restraint_rule": {
+      "type": "string",
+      "description": "其余区域如何克制。必须写出至少两个区域的具体降级方式"
+    },
+    "inspiration_source": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["image", "theme_text", "face_photo", "mixed"],
+          "description": "image=参考图灵感；theme_text=只有文字；face_photo=以人物面部照为主；mixed=面部照+灵感图"
+        },
+        "path": { "type": "string" },
+        "summary": { "type": "string" },
+        "extraction_method": {
+          "type": "string",
+          "enum": ["pixel_kmeans_lab", "visual_estimate", "none"],
+          "description": "pixel_kmeans_lab=color_extract.py 真跑过；visual_estimate=肉眼看，色值必须标近似；none=纯文字无图"
+        },
+        "palette_ref": { "type": "string" },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "例如：手机拍摄偏暖、图有滤镜、无比例参照"
+        }
+      },
+      "additionalProperties": true
+    },
+    "palette": {
+      "type": "object",
+      "required": ["measured", "designed"],
+      "properties": {
+        "measured": {
+          "type": "array",
+          "description": "参考图实测色。纯文字设计时为空数组，不得编造",
+          "items": {
+            "type": "object",
+            "required": ["hex"],
+            "properties": {
+              "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+              "name_zh": { "type": "string" },
+              "area_ratio": { "type": "number" },
+              "role": { "type": "string", "enum": ["primary", "secondary", "accent", "neutral"] }
+            },
+            "additionalProperties": true
+          }
+        },
+        "designed": {
+          "type": "array",
+          "description": "妆容实际使用的产品色，允许与实测色不同，但每条要写推导理由",
+          "items": {
+            "type": "object",
+            "required": ["area", "hex", "reason"],
+            "properties": {
+              "area": {
+                "type": "string",
+                "enum": ["base", "brows", "eyeshadow", "eyeliner", "lashes", "blush", "lips", "highlight", "contour", "finishing"]
+              },
+              "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+              "product": { "type": "string" },
+              "reason": { "type": "string", "description": "从实测色到设计色的偏移理由（降饱和/提亮/换色相）" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "translation_notes": {
+          "type": "string",
+          "description": "整体转译逻辑，禁止只写'蓝像海'这类无设计信息的解释"
+        }
+      },
+      "additionalProperties": true
+    },
+    "layers": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "九个结构层。只做局部妆容时只放对应层，其余不要凭空补全",
+      "properties": {
+        "base": {
+          "type": "object",
+          "properties": {
+            "foundation": { "type": "string" },
+            "coverage": { "type": "string", "enum": ["sheer", "medium", "full", "spot"] },
+            "finish": { "type": "string", "enum": ["matte", "satin", "dewy", "velvet", "natural"] },
+            "concealer": { "type": "string" },
+            "powder": { "type": "string" },
+            "skin_texture": { "type": "string", "description": "是否保留皮肤纹理；写'保留'就要说明怎么保留" }
+          },
+          "additionalProperties": true
+        },
+        "brows": {
+          "type": "object",
+          "properties": {
+            "shape": { "type": "string" },
+            "thickness": { "type": "string" },
+            "product": { "type": "string" },
+            "color_hex": { "type": "string" },
+            "technique": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "eyeshadow": {
+          "type": "object",
+          "properties": {
+            "base_wash": { "type": "string" },
+            "main": { "type": "string" },
+            "deepen": { "type": "string" },
+            "highlight": { "type": "string" },
+            "lower_lid": { "type": "string" },
+            "boundary": { "type": "string", "enum": ["hard", "soft", "gradient", "graphic"] },
+            "finish": { "type": "string", "enum": ["matte", "satin", "shimmer", "metallic", "glossy"] }
+          },
+          "additionalProperties": true
+        },
+        "eyeliner": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["none", "tightline", "thin", "classic", "winged", "puppy", "graphic", "smudged"] },
+            "thickness_mm": { "type": "number" },
+            "tail_mm": { "type": "number" },
+            "angle_deg": { "type": "number" },
+            "color_hex": { "type": "string" },
+            "technique": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "lashes": {
+          "type": "object",
+          "properties": {
+            "curl": { "type": "string" },
+            "mascara": { "type": "string" },
+            "falsies": { "type": "string", "description": "none / strip / individual / cluster；不得写不存在的规格" },
+            "lower": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "blush": {
+          "type": "object",
+          "properties": {
+            "position": { "type": "string" },
+            "shape": { "type": "string", "enum": ["round", "diagonal", "horizontal", "draped", "under_eye"] },
+            "texture": { "type": "string", "enum": ["powder", "cream", "liquid", "gel"] },
+            "color_hex": { "type": "string" },
+            "intensity": { "type": "string", "enum": ["sheer", "moderate", "strong"] }
+          },
+          "additionalProperties": true
+        },
+        "lips": {
+          "type": "object",
+          "properties": {
+            "color_hex": { "type": "string" },
+            "finish": { "type": "string", "enum": ["matte", "satin", "gloss", "tint", "balm", "metallic"] },
+            "liner": { "type": "string" },
+            "shape_adjust": { "type": "string", "description": "唇形调整幅度，超过 1.5mm 需说明手法" },
+            "technique": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "highlight_contour": {
+          "type": "object",
+          "properties": {
+            "contour": { "type": "string" },
+            "highlight": { "type": "string" },
+            "finish": { "type": "string", "enum": ["no_shimmer", "fine_shimmer", "chunky_shimmer", "cream"] }
+          },
+          "additionalProperties": true
+        },
+        "finishing": {
+          "type": "object",
+          "properties": {
+            "setting": { "type": "string" },
+            "final_texture": { "type": "string" },
+            "lasting_note": { "type": "string", "description": "只写影响因素，不得承诺具体持妆时长" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "application_steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step", "area", "product_type", "placement", "technique", "effect"],
+        "properties": {
+          "step": { "type": "integer", "minimum": 1 },
+          "area": { "type": "string" },
+          "product_type": { "type": "string" },
+          "color": { "type": "string" },
+          "placement": { "type": "string" },
+          "technique": { "type": "string", "description": "点/压/晕/拉/扫，工具与力度" },
+          "effect": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "suitable_occasions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "face_analysis": {
+      "type": "object",
+      "description": "仅场景 B/C2（用户给面部照）需要",
+      "properties": {
+        "photo": { "type": "string" },
+        "observed": { "type": "array", "items": { "type": "string" } },
+        "not_inferred": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "明确列出没有从照片推断的东西：肤质、过敏史、年龄等"
+        },
+        "preserved_features": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "出图时必须保持不变的面部特征"
+        }
+      },
+      "additionalProperties": true
+    },
+    "differentiation": {
+      "type": "object",
+      "description": "同一参考图出多套时必填：差异必须在结构，不只是换色",
+      "properties": {
+        "compared_with": { "type": "array", "items": { "type": "string" } },
+        "differs_in": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["eye_structure", "eye_placement", "texture", "lip_finish", "lip_shape", "focus_area", "liner_type", "base_finish", "brow_shape"]
+          },
+          "description": "至少 3 项，且不能只含 color"
+        },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "generation": {
+      "type": "object",
+      "required": ["route"],
+      "properties": {
+        "route": {
+          "type": "string",
+          "enum": ["creative_generation", "reference_based_generation", "not_generated"],
+          "description": "product_compositing 不适用于面部妆容（没有验证过的局部面部像素编辑能力），不得声称可用"
+        },
+        "route_reason": { "type": "string" },
+        "prompt": { "type": "string" },
+        "negative_prompt": { "type": "string" },
+        "aspect_ratio": { "type": "string" },
+        "reference_images": { "type": "array", "items": { "type": "string" } },
+        "preserve_instructions": { "type": "string", "description": "参考图路线必填：哪些面部特征必须保留" },
+        "ai_disclosure": {
+          "type": "string",
+          "description": "对外标注文案，例如'AI 妆容模拟效果，非真实上妆照片'"
+        }
+      },
+      "additionalProperties": true
+    },
+    "safety_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "例如：眼周只用眼用化妆品、用前做斑贴测试、不共用、注意保质期"
+    },
+    "consistency_check": {
+      "type": "object",
+      "properties": {
+        "image_path": { "type": "string" },
+        "checked_at": { "type": "string" },
+        "deviations": { "type": "array", "items": { "type": "string" } },
+        "not_verifiable": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,11 @@
+{
+  "expected_hex": [
+    "#0F2B46",
+    "#2E8B93",
+    "#F4EDE4",
+    "#D8C3A5",
+    "#9CB89A"
+  ],
+  "blocks": 5,
+  "equal_area": true
+}

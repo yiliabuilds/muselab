@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muselab.local/schemas/visual-profile.schema.json",
+  "title": "MuseLab Visual Profile",
+  "description": "Structured result of analysing a reference image. Reused by every creative module.",
+  "type": "object",
+  "required": ["source_image", "color_palette", "extraction_method"],
+  "properties": {
+    "profile_id": {
+      "type": "string",
+      "pattern": "^vp_[A-Za-z0-9_-]+$",
+      "description": "Stable id, e.g. vp_beach_01"
+    },
+    "source_image": {
+      "type": "string",
+      "description": "Absolute path or URL of the analysed image"
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": ["user_upload", "url", "generated", "design_render"]
+    },
+    "color_palette": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "required": ["hex"],
+        "properties": {
+          "name_zh": { "type": "string" },
+          "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "rgb": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "lab": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "area_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+          "role": { "type": "string", "enum": ["primary", "secondary", "accent"] },
+          "design_use": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "dominant_colors": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+    },
+    "visual_elements": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Observable elements: wave foam, gradient band, tide rhythm, ..."
+    },
+    "shapes": { "type": "array", "items": { "type": "string" } },
+    "textures": { "type": "array", "items": { "type": "string" } },
+    "composition": { "type": "string" },
+    "style": { "type": "string" },
+    "mood": {
+      "type": "object",
+      "properties": {
+        "mood_words": { "type": "array", "items": { "type": "string" } },
+        "temperature": { "type": "string", "enum": ["warm", "cool", "balanced"] },
+        "mean_lightness": { "type": "number" },
+        "mean_chroma": { "type": "number" },
+        "contrast_spread": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "symbols": { "type": "array", "items": { "type": "string" } },
+    "design_opportunities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Concrete translatable directions, not generic adjectives"
+    },
+    "design_keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 12,
+      "description": "Reusable prompt keywords"
+    },
+    "extraction_method": {
+      "type": "string",
+      "enum": ["pixel_kmeans_lab", "visual_estimate", "hybrid"],
+      "description": "pixel_kmeans_lab = measured from pixels; visual_estimate = model judgement only"
+    },
+    "confidence_notes": { "type": "array", "items": { "type": "string" } },
+    "created_at": { "type": "string" }
+  },
+  "additionalProperties": true
+}

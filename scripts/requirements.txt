@@ -1,0 +1,9 @@
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# Optional: full JSON Schema validation (falls back to required-field checks)
+# jsonschema>=4.20.0
+
+# Optional: real subject cutout with true alpha (macOS only, requires macOS 14+)
+# pyobjc-framework-Vision>=10.0
+# pyobjc-framework-Quartz>=10.0

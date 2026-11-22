@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muselab.local/schemas/image-task.schema.json",
+  "title": "MuseLab Image Task",
+  "description": "One image-generation or image-editing job, including its honest outcome.",
+  "type": "object",
+  "required": [
+    "task_id",
+    "design_id",
+    "image_type",
+    "prompt",
+    "execution_status"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^img_[A-Za-z0-9_-]+$"
+    },
+    "design_id": {
+      "type": "string"
+    },
+    "design_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "image_type": {
+      "type": "string",
+      "enum": [
+        "product_shot",
+        "white_background",
+        "transparent_cutout",
+        "lifestyle",
+        "try_on",
+        "collection_sheet",
+        "social_visual",
+        "makeup_look",
+        "makeup_try_on",
+        "edited"
+      ]
+    },
+    "generation_mode": {
+      "type": "string",
+      "enum": [
+        "product_compositing",
+        "creative_generation",
+        "reference_based_generation",
+        "concept",
+        "product_fidelity"
+      ],
+      "description": "product_compositing = 真实商品像素换背景，不用生成模型（唯一可承诺商品保真）；creative_generation = 文生图概念稿；reference_based_generation = 参考图让模型重画，只能标 AI 模拟。concept / product_fidelity 是 V1.1 旧值，仅为历史档案保留，新任务不要再用。见 workflows/generation-modes.md"
+    },
+    "reference_images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "negative_prompt": {
+      "type": "string"
+    },
+    "aspect_ratio": {
+      "type": "string",
+      "default": "1:1"
+    },
+    "output_format": {
+      "type": "string",
+      "enum": [
+        "png",
+        "jpg",
+        "webp"
+      ],
+      "default": "png"
+    },
+    "tool_used": {
+      "type": "string",
+      "enum": [
+        "ImageGen",
+        "vision_cutout",
+        "alpha_composite",
+        "none",
+        "other"
+      ],
+      "description": "none = no tool was available; prompt-only delivery. A compositing job that runs cutout.py then compose.py records alpha_composite."
+    },
+    "execution_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "skipped_no_tool"
+      ]
+    },
+    "output_path": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "null when nothing was produced. Never invent a path."
+    },
+    "fidelity_notes": {
+      "type": "string",
+      "description": "What may differ from the approved design: bead count, clasp shape, text artefacts..."
+    },
+    "is_generative": {
+      "type": "boolean"
+    },
+    "cost_credits_estimate": {
+      "type": "number"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

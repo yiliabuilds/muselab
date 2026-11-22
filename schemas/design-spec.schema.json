@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://muselab.local/schemas/design-spec.schema.json",
+  "title": "MuseLab Design Specification",
+  "description": "One concrete, makeable design. Frozen once approved.",
+  "type": "object",
+  "required": ["design_id", "design_category", "design_name", "concept", "image_prompt", "negative_prompt", "approval_status"],
+  "properties": {
+    "design_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{3,40}$",
+      "description": "e.g. jw_beach_bracelet_A"
+    },
+    "project_id": { "type": "string" },
+    "design_category": {
+      "type": "string",
+      "enum": ["bracelet", "beaded_bracelet", "necklace", "earrings", "ring", "bag_charm", "phone_charm", "collection", "makeup", "other"],
+      "description": "bracelet=手链/串珠, necklace=项链, earrings=耳饰, ring=戒指, bag_charm=包挂, phone_charm=手机挂链, makeup=妆容（专有字段放 module_payload，见 makeup-spec.schema.json）"
+    },
+    "design_name": { "type": "string", "maxLength": 40 },
+    "source_profile_id": { "type": "string" },
+    "concept": { "type": "string", "description": "Why this design exists, tied to the reference" },
+    "design_mode": { "type": "string", "enum": ["inspiration_transfer", "element_retention", "free_creation"] },
+    "structure": {
+      "type": "object",
+      "description": "首饰类必填（由 muselab_state 按类目强制）。design_category=makeup 不适用：妆容的'结构'是 module_payload.layers 的九个层次，不是珠串 archetype。",
+      "required": ["archetype"],
+      "properties": {
+        "archetype": {
+          "type": "string",
+          "enum": ["half_bead_half_chain", "knotted_cord", "asymmetric_pendant", "irregular_centerpiece", "double_layer", "metal_bead_mix", "minimal_single_pendant", "partial_strand_chain", "full_strand", "hoop", "stud", "dangle"]
+        },
+        "length_mm": { "type": "number" },
+        "description": { "type": "string" },
+        "sequence": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Left-to-right / top-to-bottom construction order"
+        }
+      },
+      "additionalProperties": true
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "properties": {
+          "name": { "type": "string" },
+          "spec": { "type": "string", "description": "e.g. 6mm 天然孔雀石圆珠" },
+          "quantity": { "type": "string" },
+          "role": { "type": "string", "enum": ["main", "accent", "spacer", "metal", "cord", "closure", "pendant"] },
+          "finish": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "colors": {
+      "type": "object",
+      "properties": {
+        "primary": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "secondary": { "type": "array", "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" } },
+        "accent": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      },
+      "additionalProperties": true
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "length_mm": { "type": "number" },
+        "width_mm": { "type": "number" },
+        "bead_diameter_mm": { "type": "number" },
+        "drop_mm": { "type": "number" },
+        "weight_g": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "components": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Clasps, jump rings, extension chain, cord ends, pin heads..."
+    },
+    "manufacturing_notes": { "type": "string" },
+    "feasibility": {
+      "type": "string",
+      "enum": ["handmade_simple", "handmade_advanced", "needs_finding", "needs_custom_part", "not_feasible"]
+    },
+    "style_scene": { "type": "string" },
+    "image_prompt": { "type": "string", "description": "Full Chinese or English prompt for generation" },
+    "negative_prompt": { "type": "string" },
+    "aspect_ratio": { "type": "string", "default": "1:1" },
+    "version": { "type": "integer", "minimum": 1 },
+    "approval_status": {
+      "type": "string",
+      "enum": ["draft", "selected", "approved", "revision_requested", "generated", "failed"]
+    },
+    "module_payload": {
+      "type": "object",
+      "description": "模块专有字段的唯一入口。design_category=makeup 时由 makeup-spec.schema.json 校验；首饰设计不使用此字段。这样新增模块不需要改首饰字段的含义。",
+      "additionalProperties": true
+    },
+    "parent_version": { "type": "integer" },
+    "change_request": { "type": "string", "description": "What the user asked to change, verbatim" },
+    "created_at": { "type": "string" },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
