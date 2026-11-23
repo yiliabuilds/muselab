@@ -1,0 +1,39 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ---- Secrets ----
+.env
+.env.*
+*.pem
+
+# ---- Local run artefacts (never commit) ----
+tests/_run/
+tests/fixtures/out_*
+tests/fixtures/*_cutout.png
+tests/fixtures/*_white.png
+tests/fixtures/*_dark.png
+demo_out/
+.muselab_caps.json
+.tmp/
+
+# ---- User workspaces ----
+# MuseLab writes project state next to the user's own material.
+# These are personal workspaces: reference photos, design records, renders.
+muselab-projects/
+projects/
+exports/
+
+# ---- Out-of-tree by design ----
+# Career/interview material and raw run reports live outside this repo; listed here
+# only so that a careless `cp -r` into a parent repository cannot pick them up.
+career-materials/
+tests/RESULTS.json
